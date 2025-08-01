@@ -1,4 +1,4 @@
-namespace OOP.Assignments.War
+namespace OOP.Assignments.Battle
 {
     class Battle
     {
@@ -121,7 +121,9 @@ namespace OOP.Assignments.War
         public Soldier GetRandomSoldier()
         {
             if (_aliveSoldiers.Count == 0)
+            {
                 return null;
+            }
 
             return _aliveSoldiers[UserUtils.GetRandomNumber(0, _aliveSoldiers.Count)];
         }
