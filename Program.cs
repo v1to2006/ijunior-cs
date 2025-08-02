@@ -2,8 +2,8 @@
 {
     private static void Main()
     {
-        OOP.Assignments.Battle.Battle battle = new();
+        OOP.Assignments.War.War war = new();
 
-        battle.Execute();
+        war.Execute();
     }
 }

@@ -1,4 +1,4 @@
-namespace OOP.Assignments.Battle
+namespace OOP.Assignments.War
 {
     enum SoldierType
     {
@@ -56,12 +56,12 @@ namespace OOP.Assignments.Battle
         }
     }
 
-    class Battle
+    class War
     {
         private Squad _squad1;
         private Squad _squad2;
 
-        public Battle()
+        public War()
         {
             InitSquads();
         }
