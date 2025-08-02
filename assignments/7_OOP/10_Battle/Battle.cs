@@ -1,5 +1,61 @@
 namespace OOP.Assignments.Battle
 {
+    enum SoldierType
+    {
+        Basic,
+        Powerful,
+        MultiAttack,
+        OverlappingAttack
+    }
+
+    static class SquadFactory
+    {
+        public static Squad CreateSquad(string name)
+        {
+            Squad squad = new Squad(name);
+
+            int basicSoldiersCount = UserUtils.GetRandomNumber(20, 30);
+            int powerfulSoldiersCount = UserUtils.GetRandomNumber(10, 20);
+            int multiAttackSoldiersCount = UserUtils.GetRandomNumber(5, 15);
+            int overlappingAttackSoldiersCount = UserUtils.GetRandomNumber(2, 10);
+
+            AddSoldiers(squad, SoldierType.Basic, basicSoldiersCount);
+            AddSoldiers(squad, SoldierType.Powerful, powerfulSoldiersCount);
+            AddSoldiers(squad, SoldierType.MultiAttack, multiAttackSoldiersCount);
+            AddSoldiers(squad, SoldierType.OverlappingAttack, overlappingAttackSoldiersCount);
+
+            return squad;
+        }
+
+        private static void AddSoldiers(Squad squad, SoldierType type, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                squad.AddSoldier(SoldierFactory.CreateSoldier(type));
+            }
+        }
+    }
+
+    static class SoldierFactory
+    {
+        public static Soldier CreateSoldier(SoldierType type)
+        {
+            switch (type)
+            {
+                case SoldierType.Basic:
+                    return new BasicSoldier();
+                case SoldierType.Powerful:
+                    return new PowerfulSoldier();
+                case SoldierType.MultiAttack:
+                    return new MultiAttackSoldier();
+                case SoldierType.OverlappingAttack:
+                    return new OverlappingAttackSoldier();
+                default:
+                    throw new ArgumentException("Invalid soldier type");
+            }
+        }
+    }
+
     class Battle
     {
         private Squad _squad1;
@@ -17,7 +73,9 @@ namespace OOP.Assignments.Battle
                 PerformAttack(_squad1, _squad2);
 
                 if (_squad2.HasAliveSoldiers() == false)
+                {
                     break;
+                }
 
                 PerformAttack(_squad2, _squad1);
             }
@@ -27,37 +85,8 @@ namespace OOP.Assignments.Battle
 
         private void InitSquads()
         {
-            int basicSoldiersCount = 25;
-            int powerfulSoldiersCount = 15;
-            int multiAttackSoldiersCount = 10;
-            int overlappingAttackSoldiersCount = 5;
-
-            _squad1 = new Squad("Squad 1");
-            _squad2 = new Squad("Squad 2");
-
-            for (int i = 0; i < basicSoldiersCount; i++)
-            {
-                _squad1.AddSoldier(new BasicSoldier());
-                _squad2.AddSoldier(new BasicSoldier());
-            }
-
-            for (int i = 0; i < powerfulSoldiersCount; i++)
-            {
-                _squad1.AddSoldier(new PowerfulSoldier());
-                _squad2.AddSoldier(new PowerfulSoldier());
-            }
-
-            for (int i = 0; i < multiAttackSoldiersCount; i++)
-            {
-                _squad1.AddSoldier(new MultiAttackSoldier());
-                _squad2.AddSoldier(new MultiAttackSoldier());
-            }
-
-            for (int i = 0; i < overlappingAttackSoldiersCount; i++)
-            {
-                _squad1.AddSoldier(new OverlappingAttackSoldier());
-                _squad2.AddSoldier(new OverlappingAttackSoldier());
-            }
+            _squad1 = SquadFactory.CreateSquad("Squad 1");
+            _squad2 = SquadFactory.CreateSquad("Squad 2");
         }
 
         private void PerformAttack(Squad attackingSquad, Squad defendingSquad)
@@ -103,13 +132,28 @@ namespace OOP.Assignments.Battle
             Name = name;
         }
 
-        public string Name;
+        public string Name { get; private set; }
 
         public void Attack(Squad enemySquad)
         {
             foreach (Soldier soldier in _aliveSoldiers)
             {
-                soldier.Attack(enemySquad);
+                List<Soldier> targets;
+
+                switch (soldier)
+                {
+                    case MultiAttackSoldier multiAttackSoldier:
+                        targets = enemySquad.GetUniqueRandomSoldiers(multiAttackSoldier.TargetsCount);
+                        multiAttackSoldier.Attack(targets);
+                        break;
+                    case OverlappingAttackSoldier overlappingAttackSoldier:
+                        targets = enemySquad.GetRandomSoldiers(overlappingAttackSoldier.TargetsCount);
+                        overlappingAttackSoldier.Attack(targets);
+                        break;
+                    default:
+                        soldier.Attack(enemySquad.GetRandomSoldiers(soldier.TargetsCount));
+                        break;
+                }
             }
         }
 
@@ -136,7 +180,7 @@ namespace OOP.Assignments.Battle
 
             for (int i = 0; i < count; i++)
             {
-                randomSoldier.Add(_aliveSoldiers[UserUtils.GetRandomNumber(0, _aliveSoldiers.Count)]);
+                randomSoldier.Add(GetRandomSoldier());
             }
 
             return randomSoldier;
@@ -182,12 +226,7 @@ namespace OOP.Assignments.Battle
 
         public bool HasAliveSoldiers()
         {
-            if (_aliveSoldiers.Count > 0)
-            {
-                return true;
-            }
-
-            return false;
+            return _aliveSoldiers.Count > 0;
         }
 
         private int ClampCountToAliveSoldiers(int count)
@@ -205,13 +244,15 @@ namespace OOP.Assignments.Battle
         {
             _health = 100;
             _armor = 50;
-            Damage = 20;
+            Damage = 10;
+            TargetsCount = 1;
         }
 
         protected int Damage;
+        public int TargetsCount { get; protected set; }
         public bool IsAlive => _health > 0;
 
-        public abstract void Attack(Squad enemySquad);
+        public abstract void Attack(List<Soldier> targets);
 
         public void TakeDamage(int damage)
         {
@@ -229,9 +270,12 @@ namespace OOP.Assignments.Battle
 
     class BasicSoldier : Soldier
     {
-        public override void Attack(Squad enemySquad)
+        public override void Attack(List<Soldier> targets)
         {
-            enemySquad.GetRandomSoldier().TakeDamage(Damage);
+            foreach (Soldier enemySoldier in targets)
+            {
+                enemySoldier.TakeDamage(Damage);
+            }
         }
     }
 
@@ -239,19 +283,25 @@ namespace OOP.Assignments.Battle
     {
         private double _damageMultiplier = 2;
 
-        public override void Attack(Squad enemySquad)
+        public override void Attack(List<Soldier> targets)
         {
-            enemySquad.GetRandomSoldier().TakeDamage((int)(Damage * _damageMultiplier));
+            foreach (Soldier enemySoldier in targets)
+            {
+                enemySoldier.TakeDamage((int)(Damage * _damageMultiplier));
+            }
         }
     }
 
     class MultiAttackSoldier : Soldier
     {
-        private int _targetsCount = 3;
-
-        public override void Attack(Squad enemySquad)
+        public MultiAttackSoldier()
         {
-            foreach (Soldier enemySoldier in enemySquad.GetUniqueRandomSoldiers(_targetsCount))
+            TargetsCount = 3;
+        }
+
+        public override void Attack(List<Soldier> targets)
+        {
+            foreach (Soldier enemySoldier in targets)
             {
                 enemySoldier.TakeDamage(Damage);
             }
@@ -260,11 +310,14 @@ namespace OOP.Assignments.Battle
 
     class OverlappingAttackSoldier : Soldier
     {
-        private int _targetsCount = 5;
-
-        public override void Attack(Squad enemySquad)
+        public OverlappingAttackSoldier()
         {
-            foreach (Soldier enemySoldier in enemySquad.GetRandomSoldiers(_targetsCount))
+            TargetsCount = 5;
+        }
+
+        public override void Attack(List<Soldier> targets)
+        {
+            foreach (Soldier enemySoldier in targets)
             {
                 enemySoldier.TakeDamage(Damage);
             }
