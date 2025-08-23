@@ -284,7 +284,6 @@ namespace OOP.Assignments.War
             }
         }
 
-        // Remake
         private List<Soldier> GetUniqueRandomSoldiers(int count, List<Soldier> enemySoldiers)
         {
             count = ClampCountToAliveSoldiers(count, enemySoldiers);
