@@ -4,6 +4,6 @@
     {
         OOP.Assignments.War.War war = new();
 
-        war.Execute();
+        war.Start();
     }
 }
