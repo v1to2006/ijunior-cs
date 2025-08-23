@@ -1,58 +1,43 @@
 namespace OOP.Assignments.War
 {
-    enum SoldierType
+    class SquadFactory
     {
-        Basic,
-        Powerful,
-        MultiAttack,
-        OverlappingAttack
-    }
+        private SoldierFactory _soldierFactory = new SoldierFactory();
 
-    static class SquadFactory
-    {
-        public static Squad CreateSquad(string name)
+        public Squad Create(string name)
         {
             Squad squad = new Squad(name);
 
-            int basicSoldiersCount = UserUtils.GetRandomNumber(20, 30);
-            int powerfulSoldiersCount = UserUtils.GetRandomNumber(10, 20);
-            int multiAttackSoldiersCount = UserUtils.GetRandomNumber(5, 15);
-            int overlappingAttackSoldiersCount = UserUtils.GetRandomNumber(2, 10);
+            Dictionary<Soldier, int> soldierCounts = new Dictionary<Soldier, int>
+            {
+                {new BasicSoldier(), UserUtils.GetRandomNumber(20, 30)},
+                {new PowerfulSoldier(), UserUtils.GetRandomNumber(10, 20)},
+                {new MultiAttackSoldier(), UserUtils.GetRandomNumber(5, 15)},
+                {new OverlappingAttackSoldier(), UserUtils.GetRandomNumber(2, 10)},
+            };
 
-            AddSoldiers(squad, SoldierType.Basic, basicSoldiersCount);
-            AddSoldiers(squad, SoldierType.Powerful, powerfulSoldiersCount);
-            AddSoldiers(squad, SoldierType.MultiAttack, multiAttackSoldiersCount);
-            AddSoldiers(squad, SoldierType.OverlappingAttack, overlappingAttackSoldiersCount);
+            foreach (KeyValuePair<Soldier, int> soldierCount in soldierCounts)
+            {
+                AddSoldiers(squad, soldierCount.Key, soldierCount.Value);
+            }
 
             return squad;
         }
 
-        private static void AddSoldiers(Squad squad, SoldierType type, int count)
+        private void AddSoldiers(Squad squad, Soldier soldier, int count)
         {
             for (int i = 0; i < count; i++)
             {
-                squad.AddSoldier(SoldierFactory.CreateSoldier(type));
+                squad.AddSoldier(_soldierFactory.Create(soldier));
             }
         }
     }
 
-    static class SoldierFactory
+    class SoldierFactory
     {
-        public static Soldier CreateSoldier(SoldierType type)
+        public Soldier Create(Soldier soldier)
         {
-            switch (type)
-            {
-                case SoldierType.Basic:
-                    return new BasicSoldier();
-                case SoldierType.Powerful:
-                    return new PowerfulSoldier();
-                case SoldierType.MultiAttack:
-                    return new MultiAttackSoldier();
-                case SoldierType.OverlappingAttack:
-                    return new OverlappingAttackSoldier();
-                default:
-                    throw new ArgumentException("Invalid soldier type");
-            }
+            return soldier.Clone();
         }
     }
 
@@ -66,13 +51,16 @@ namespace OOP.Assignments.War
             InitSquads();
         }
 
-        public void Execute()
+        public void Start()
         {
-            while (_squad1.HasAliveSoldiers() && _squad2.HasAliveSoldiers())
+            AnnounceWar();
+            DisplaySquadsInfo();
+
+            while (_squad1.HasSoldiers() && _squad2.HasSoldiers())
             {
                 PerformAttack(_squad1, _squad2);
 
-                if (_squad2.HasAliveSoldiers() == false)
+                if (_squad2.HasSoldiers() == false)
                 {
                     break;
                 }
@@ -85,15 +73,19 @@ namespace OOP.Assignments.War
 
         private void InitSquads()
         {
-            _squad1 = SquadFactory.CreateSquad("Squad 1");
-            _squad2 = SquadFactory.CreateSquad("Squad 2");
+            SquadFactory squadFactory = new SquadFactory();
+
+            _squad1 = squadFactory.Create("Squad 1");
+            _squad2 = squadFactory.Create("Squad 2");
         }
 
         private void PerformAttack(Squad attackingSquad, Squad defendingSquad)
         {
             Console.Clear();
+            Console.WriteLine("\x1b[3J");
+            Console.Clear();
             Console.WriteLine($"{attackingSquad.Name} attacks\n");
-            attackingSquad.Attack(defendingSquad);
+            attackingSquad.Attack(defendingSquad.Soldiers);
             defendingSquad.RemoveDeadSoldiers();
             DisplaySquadsInfo();
         }
@@ -107,12 +99,12 @@ namespace OOP.Assignments.War
 
         private void DisplaySquadInfo(Squad squad)
         {
-            Console.WriteLine($"{squad.Name} has {squad.GetAliveSoldiersCount()} alive soldiers");
+            Console.WriteLine($"{squad.Name} has {squad.GetSoldiersCount()} alive soldiers");
         }
 
         private void AnnounceWinner()
         {
-            if (_squad1.HasAliveSoldiers() && _squad2.HasAliveSoldiers() == false)
+            if (_squad1.HasSoldiers() && _squad2.HasSoldiers() == false)
             {
                 Console.WriteLine($"\n{_squad1.Name} won!");
             }
@@ -121,11 +113,17 @@ namespace OOP.Assignments.War
                 Console.WriteLine($"\n{_squad2.Name} won!");
             }
         }
+
+        private void AnnounceWar()
+        {
+            Console.WriteLine("War started between Squad 1 and Squad 2!");
+            Console.WriteLine("Press any key to start the war...\n");
+        }
     }
 
     class Squad
     {
-        private List<Soldier> _aliveSoldiers = new List<Soldier>();
+        private List<Soldier> _soldiers = new List<Soldier>();
 
         public Squad(string name)
         {
@@ -133,82 +131,29 @@ namespace OOP.Assignments.War
         }
 
         public string Name { get; private set; }
+        public List<Soldier> Soldiers => new(_soldiers);
 
-        public void Attack(Squad enemySquad)
+        public int GetSoldiersCount() => _soldiers.Count();
+        public bool HasSoldiers() => GetSoldiersCount() > 0;
+
+        public void Attack(List<Soldier> enemySoldiers)
         {
-            foreach (Soldier soldier in _aliveSoldiers)
+            foreach (Soldier soldier in _soldiers)
             {
-                List<Soldier> targets;
-
-                switch (soldier)
-                {
-                    case MultiAttackSoldier multiAttackSoldier:
-                        targets = enemySquad.GetUniqueRandomSoldiers(multiAttackSoldier.TargetsCount);
-                        multiAttackSoldier.Attack(targets);
-                        break;
-                    case OverlappingAttackSoldier overlappingAttackSoldier:
-                        targets = enemySquad.GetRandomSoldiers(overlappingAttackSoldier.TargetsCount);
-                        overlappingAttackSoldier.Attack(targets);
-                        break;
-                    default:
-                        soldier.Attack(enemySquad.GetRandomSoldiers(soldier.TargetsCount));
-                        break;
-                }
+                soldier.Attack(enemySoldiers);
             }
         }
 
         public void AddSoldier(Soldier soldier)
         {
-            _aliveSoldiers.Add(soldier);
-        }
-
-        public Soldier GetRandomSoldier()
-        {
-            if (_aliveSoldiers.Count == 0)
-            {
-                return null;
-            }
-
-            return _aliveSoldiers[UserUtils.GetRandomNumber(0, _aliveSoldiers.Count)];
-        }
-
-        public List<Soldier> GetRandomSoldiers(int count)
-        {
-            count = ClampCountToAliveSoldiers(count);
-
-            List<Soldier> randomSoldier = new List<Soldier>();
-
-            for (int i = 0; i < count; i++)
-            {
-                randomSoldier.Add(GetRandomSoldier());
-            }
-
-            return randomSoldier;
-        }
-
-        public List<Soldier> GetUniqueRandomSoldiers(int count)
-        {
-            count = ClampCountToAliveSoldiers(count);
-
-            List<Soldier> tempSoldiers = new List<Soldier>(_aliveSoldiers);
-            List<Soldier> randomUniqueSoldiers = new List<Soldier>();
-
-            for (int i = 0; i < count; i++)
-            {
-                Soldier randomSoldier = tempSoldiers[UserUtils.GetRandomNumber(0, tempSoldiers.Count)];
-
-                randomUniqueSoldiers.Add(randomSoldier);
-                tempSoldiers.Remove(randomSoldier);
-            }
-
-            return randomUniqueSoldiers;
+            _soldiers.Add(soldier);
         }
 
         public void RemoveDeadSoldiers()
         {
             List<Soldier> updatedSoldiers = new List<Soldier>();
 
-            foreach (Soldier soldier in _aliveSoldiers)
+            foreach (Soldier soldier in _soldiers)
             {
                 if (soldier.IsAlive)
                 {
@@ -216,22 +161,7 @@ namespace OOP.Assignments.War
                 }
             }
 
-            _aliveSoldiers = updatedSoldiers;
-        }
-
-        public int GetAliveSoldiersCount()
-        {
-            return _aliveSoldiers.Count;
-        }
-
-        public bool HasAliveSoldiers()
-        {
-            return _aliveSoldiers.Count > 0;
-        }
-
-        private int ClampCountToAliveSoldiers(int count)
-        {
-            return Math.Min(count, GetAliveSoldiersCount());
+            _soldiers = updatedSoldiers;
         }
     }
 
@@ -239,6 +169,7 @@ namespace OOP.Assignments.War
     {
         private int _health;
         private int _armor;
+        protected int Damage;
 
         public Soldier()
         {
@@ -248,9 +179,10 @@ namespace OOP.Assignments.War
             TargetsCount = 1;
         }
 
-        protected int Damage;
         public int TargetsCount { get; protected set; }
         public bool IsAlive => _health > 0;
+
+        public abstract Soldier Clone();
 
         public abstract void Attack(List<Soldier> targets);
 
@@ -266,12 +198,43 @@ namespace OOP.Assignments.War
 
             _health -= effectiveDamage;
         }
+
+        protected int ClampCountToAliveSoldiers(int count, List<Soldier> soldiers)
+        {
+            return Math.Min(count, soldiers.Count);
+        }
+
+        protected List<Soldier> GetRandomEnemySoldiers(int count, List<Soldier> soldiers)
+        {
+            count = ClampCountToAliveSoldiers(count, soldiers);
+
+            List<Soldier> randomSoldiers = new List<Soldier>();
+
+            for (int i = 0; i < count; i++)
+            {
+                randomSoldiers.Add(GetRandomEnemySoldier(soldiers));
+            }
+
+            return randomSoldiers;
+        }
+
+        private Soldier GetRandomEnemySoldier(List<Soldier> soldiers)
+        {
+            return soldiers[UserUtils.GetRandomNumber(0, soldiers.Count)];
+        }
     }
 
     class BasicSoldier : Soldier
     {
-        public override void Attack(List<Soldier> targets)
+        public override Soldier Clone()
         {
+            return new BasicSoldier();
+        }
+
+        public override void Attack(List<Soldier> enemySoldiers)
+        {
+            List<Soldier> targets = GetRandomEnemySoldiers(TargetsCount, enemySoldiers);
+
             foreach (Soldier enemySoldier in targets)
             {
                 enemySoldier.TakeDamage(Damage);
@@ -283,8 +246,15 @@ namespace OOP.Assignments.War
     {
         private double _damageMultiplier = 2;
 
-        public override void Attack(List<Soldier> targets)
+        public override Soldier Clone()
         {
+            return new PowerfulSoldier();
+        }
+
+        public override void Attack(List<Soldier> enemySoldiers)
+        {
+            List<Soldier> targets = GetRandomEnemySoldiers(TargetsCount, enemySoldiers);
+
             foreach (Soldier enemySoldier in targets)
             {
                 enemySoldier.TakeDamage((int)(Damage * _damageMultiplier));
@@ -299,12 +269,37 @@ namespace OOP.Assignments.War
             TargetsCount = 3;
         }
 
-        public override void Attack(List<Soldier> targets)
+        public override Soldier Clone()
         {
+            return new MultiAttackSoldier();
+        }
+
+        public override void Attack(List<Soldier> enemySoldiers)
+        {
+            List<Soldier> targets = GetUniqueRandomSoldiers(TargetsCount, enemySoldiers);
+
             foreach (Soldier enemySoldier in targets)
             {
                 enemySoldier.TakeDamage(Damage);
             }
+        }
+
+        private List<Soldier> GetUniqueRandomSoldiers(int count, List<Soldier> enemySoldiers)
+        {
+            count = ClampCountToAliveSoldiers(count, enemySoldiers);
+
+            List<Soldier> tempSoldiers = new List<Soldier>(enemySoldiers);
+            List<Soldier> randomUniqueSoldiers = new List<Soldier>();
+
+            for (int i = 0; i < count; i++)
+            {
+                Soldier randomSoldier = tempSoldiers[UserUtils.GetRandomNumber(0, tempSoldiers.Count)];
+
+                randomUniqueSoldiers.Add(randomSoldier);
+                tempSoldiers.Remove(randomSoldier);
+            }
+
+            return randomUniqueSoldiers;
         }
     }
 
@@ -315,8 +310,15 @@ namespace OOP.Assignments.War
             TargetsCount = 5;
         }
 
-        public override void Attack(List<Soldier> targets)
+        public override Soldier Clone()
         {
+            return new OverlappingAttackSoldier();
+        }
+
+        public override void Attack(List<Soldier> enemySoldiers)
+        {
+            List<Soldier> targets = GetRandomEnemySoldiers(TargetsCount, enemySoldiers);
+
             foreach (Soldier enemySoldier in targets)
             {
                 enemySoldier.TakeDamage(Damage);
