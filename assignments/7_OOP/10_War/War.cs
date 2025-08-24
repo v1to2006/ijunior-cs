@@ -196,26 +196,26 @@ namespace OOP.Assignments.War
             _health -= effectiveDamage;
         }
 
-        protected int ClampCountToAliveSoldiers(int count, List<Soldier> soldiers)
+        protected int ClampTargetCount(int count, List<Soldier> soldiers)
         {
             return Math.Min(count, soldiers.Count);
         }
 
-        protected List<Soldier> GetRandomEnemies(int count, List<Soldier> soldiers)
+        protected List<Soldier> GetRandomTargets(int count, List<Soldier> soldiers)
         {
-            count = ClampCountToAliveSoldiers(count, soldiers);
+            count = ClampTargetCount(count, soldiers);
 
             List<Soldier> randomSoldiers = new List<Soldier>();
 
             for (int i = 0; i < count; i++)
             {
-                randomSoldiers.Add(GetRandomEnemy(soldiers));
+                randomSoldiers.Add(GetRandomTarget(soldiers));
             }
 
             return randomSoldiers;
         }
 
-        private Soldier GetRandomEnemy(List<Soldier> soldiers)
+        private Soldier GetRandomTarget(List<Soldier> soldiers)
         {
             return soldiers[UserUtils.GetRandomNumber(0, soldiers.Count)];
         }
@@ -230,7 +230,7 @@ namespace OOP.Assignments.War
 
         public override void Attack(List<Soldier> enemySoldiers)
         {
-            List<Soldier> targets = GetRandomEnemies(TargetsCount, enemySoldiers);
+            List<Soldier> targets = GetRandomTargets(TargetsCount, enemySoldiers);
 
             foreach (Soldier enemySoldier in targets)
             {
@@ -250,7 +250,7 @@ namespace OOP.Assignments.War
 
         public override void Attack(List<Soldier> enemySoldiers)
         {
-            List<Soldier> targets = GetRandomEnemies(TargetsCount, enemySoldiers);
+            List<Soldier> targets = GetRandomTargets(TargetsCount, enemySoldiers);
 
             foreach (Soldier enemySoldier in targets)
             {
@@ -273,7 +273,7 @@ namespace OOP.Assignments.War
 
         public override void Attack(List<Soldier> enemySoldiers)
         {
-            List<Soldier> targets = GetUniqueRandomEnemies(TargetsCount, enemySoldiers);
+            List<Soldier> targets = GetUniqueRandomTargets(TargetsCount, enemySoldiers);
 
             foreach (Soldier enemySoldier in targets)
             {
@@ -281,9 +281,9 @@ namespace OOP.Assignments.War
             }
         }
 
-        private List<Soldier> GetUniqueRandomEnemies(int count, List<Soldier> enemySoldiers)
+        private List<Soldier> GetUniqueRandomTargets(int count, List<Soldier> enemySoldiers)
         {
-            count = ClampCountToAliveSoldiers(count, enemySoldiers);
+            count = ClampTargetCount(count, enemySoldiers);
 
             List<Soldier> tempSoldiers = new List<Soldier>(enemySoldiers);
             List<Soldier> randomUniqueSoldiers = new List<Soldier>();
@@ -314,7 +314,7 @@ namespace OOP.Assignments.War
 
         public override void Attack(List<Soldier> enemySoldiers)
         {
-            List<Soldier> targets = GetRandomEnemies(TargetsCount, enemySoldiers);
+            List<Soldier> targets = GetRandomTargets(TargetsCount, enemySoldiers);
 
             foreach (Soldier enemySoldier in targets)
             {
