@@ -6,6 +6,6 @@ class Program
     {
         War war = new();
 
-        war.Start();
+        war.Run();
     }
 }
