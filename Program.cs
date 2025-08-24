@@ -1,11 +1,11 @@
-﻿using OOP.Assignments.Aquarium;
+﻿using OOP.Assignments.Zoo;
 
 class Program
 {
     private static void Main()
     {
-        Aquarist aquarist = new();
+        Visitor visitor = new Visitor();
 
-        aquarist.Run();
+        visitor.Run();
     }
 }
