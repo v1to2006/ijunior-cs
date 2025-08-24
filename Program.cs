@@ -1,4 +1,4 @@
-﻿using OOP.Assignments.Zoo;
+﻿using Assignments.OOP.Zoo;
 
 class Program
 {

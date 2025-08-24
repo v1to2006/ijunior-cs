@@ -1,4 +1,4 @@
-﻿namespace OOP.Assignments.Zoo
+﻿namespace Assignments.OOP.Zoo
 {
     enum Gender
     {

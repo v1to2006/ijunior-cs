@@ -1,4 +1,4 @@
-namespace OOP.Assignments.War
+namespace Assignments.OOP.War
 {
     class SquadFactory
     {

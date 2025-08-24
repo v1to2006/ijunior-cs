@@ -1,4 +1,4 @@
-﻿namespace OOP.Assignments.Aquarium
+﻿namespace Assignments.OOP.Aquarium
 {
     class Aquarist
     {
