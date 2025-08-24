@@ -1,4 +1,4 @@
-﻿namespace ijunior_cs.assignments._7_OOP._11_Aquarium
+﻿namespace OOP.Assignments.Aquarium
 {
     class Aquarium
     {
@@ -44,7 +44,7 @@
                         break;
                     case CommandExit:
                         isContinue = false;
-                        break;
+                        continue;
                 }
 
                 LiveCycle();
