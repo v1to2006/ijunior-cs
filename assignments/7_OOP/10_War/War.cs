@@ -10,15 +10,15 @@ namespace OOP.Assignments.War
 
             Dictionary<Soldier, int> soldierCounts = new Dictionary<Soldier, int>
             {
-                {new BasicSoldier(), UserUtils.GetRandomNumber(20, 30)},
-                {new PowerfulSoldier(), UserUtils.GetRandomNumber(10, 20)},
-                {new MultiAttackSoldier(), UserUtils.GetRandomNumber(5, 15)},
-                {new OverlappingAttackSoldier(), UserUtils.GetRandomNumber(2, 10)},
+                {new BasicSoldier(), UserUtils.GetRandomNumber(20, 30 + 1)},
+                {new PowerfulSoldier(), UserUtils.GetRandomNumber(10, 20 + 1)},
+                {new MultiAttackSoldier(), UserUtils.GetRandomNumber(5, 15 + 1)},
+                {new OverlappingAttackSoldier(), UserUtils.GetRandomNumber(2, 10 + 1)},
             };
 
-            foreach (KeyValuePair<Soldier, int> soldierCount in soldierCounts)
+            foreach ((Soldier soldier, int count) in soldierCounts)
             {
-                AddSoldiers(squad, soldierCount.Key, soldierCount.Value);
+                AddSoldiers(squad, soldier, count);
             }
 
             return squad;
@@ -56,16 +56,14 @@ namespace OOP.Assignments.War
             AnnounceWar();
             DisplaySquadsInfo();
 
-            while (_squad1.HasSoldiers() && _squad2.HasSoldiers())
+            while (_squad1.HasSoldiers && _squad2.HasSoldiers)
             {
                 PerformAttack(_squad1, _squad2);
 
-                if (_squad2.HasSoldiers() == false)
+                if (_squad2.HasSoldiers)
                 {
-                    break;
+                    PerformAttack(_squad2, _squad1);
                 }
-
-                PerformAttack(_squad2, _squad1);
             }
 
             AnnounceWinner();
@@ -99,12 +97,12 @@ namespace OOP.Assignments.War
 
         private void DisplaySquadInfo(Squad squad)
         {
-            Console.WriteLine($"{squad.Name} has {squad.GetSoldiersCount()} alive soldiers");
+            Console.WriteLine($"{squad.Name} has {squad.SoldiersCount} alive soldiers");
         }
 
         private void AnnounceWinner()
         {
-            if (_squad1.HasSoldiers() && _squad2.HasSoldiers() == false)
+            if (_squad1.HasSoldiers && _squad2.HasSoldiers == false)
             {
                 Console.WriteLine($"\n{_squad1.Name} won!");
             }
@@ -132,9 +130,8 @@ namespace OOP.Assignments.War
 
         public string Name { get; private set; }
         public List<Soldier> Soldiers => new(_soldiers);
-
-        public int GetSoldiersCount() => _soldiers.Count();
-        public bool HasSoldiers() => GetSoldiersCount() > 0;
+        public int SoldiersCount => _soldiers.Count;
+        public bool HasSoldiers => SoldiersCount > 0;
 
         public void Attack(List<Soldier> enemySoldiers)
         {
