@@ -1,11 +1,11 @@
-﻿using OOP.Assignments.War;
+﻿using OOP.Assignments.Aquarium;
 
 class Program
 {
     private static void Main()
     {
-        War war = new();
+        Aquarium aquarium = new();
 
-        war.Run();
+        aquarium.Run();
     }
 }
