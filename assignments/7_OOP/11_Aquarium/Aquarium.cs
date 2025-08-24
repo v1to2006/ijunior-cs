@@ -1,16 +1,8 @@
 ﻿namespace OOP.Assignments.Aquarium
 {
-    class Aquarium
+    class Aquarist
     {
-        private List<Fish> _fishes = new List<Fish>();
-        private int _capacity;
-        private int _cycle;
-
-        public Aquarium()
-        {
-            _capacity = 5;
-            _cycle = 0;
-        }
+        private Aquarium _aquarium = new Aquarium();
 
         public void Run()
         {
@@ -23,7 +15,7 @@
             while (isContinue)
             {
                 Console.Clear();
-                ShowInfo();
+                _aquarium.ShowInfo();
                 Console.WriteLine();
 
                 Console.WriteLine($"{CommandAdd}\tAdd fish to aquarium");
@@ -37,23 +29,23 @@
                 switch (userInput)
                 {
                     case CommandAdd:
-                        AddFish();
+                        HandleAddFish();
                         break;
                     case CommandRemove:
-                        RemoveFish();
+                        HandleRemoveFish();
                         break;
                     case CommandExit:
                         isContinue = false;
                         continue;
                 }
 
-                LiveCycle();
+                _aquarium.ProcessCycle();
             }
         }
 
-        private void AddFish()
+        private void HandleAddFish()
         {
-            if (_fishes.Count >= _capacity)
+            if (_aquarium.FishesCount == _aquarium.Capacity)
             {
                 Console.WriteLine("Aquarium is full");
                 Console.WriteLine("Press any key to continue...");
@@ -70,9 +62,7 @@
             }
             else
             {
-                _fishes.Add(new Fish(fishName.Trim()));
-
-                Console.WriteLine($"Fish {fishName} has been added to aquarium");
+                _aquarium.AddFish(new Fish(fishName));
             }
 
             Console.WriteLine("Press any key to continue...");
@@ -80,9 +70,9 @@
             return;
         }
 
-        private void RemoveFish()
+        private void HandleRemoveFish()
         {
-            if (_fishes.Count == 0)
+            if (_aquarium.FishesCount == 0)
             {
                 Console.WriteLine("No fishes in aquarium");
                 Console.WriteLine("Press any key to continue...");
@@ -90,17 +80,15 @@
                 return;
             }
 
-            ShowAllFishes();
+            _aquarium.ShowAllFishes();
             Console.Write("Enter fish index to remove: ");
             int.TryParse(Console.ReadLine(), out int input);
 
             int fishIndexToRemove = input - 1;
 
-            if (fishIndexToRemove >= 0 && fishIndexToRemove < _fishes.Count)
+            if (_aquarium.TryRemoveFishAt(fishIndexToRemove, out Fish removedFish))
             {
-                Fish fishToRemove = _fishes[fishIndexToRemove];
-                _fishes.RemoveAt(fishIndexToRemove);
-                Console.WriteLine($"Fish {fishToRemove.Name} has been removed from aquarium");
+                Console.WriteLine($"{removedFish.Name} has been removed from aquarium");
             }
             else
             {
@@ -111,35 +99,39 @@
             Console.ReadKey();
             return;
         }
+    }
 
-        private void LiveCycle()
+    class Aquarium
+    {
+        private List<Fish> _fishes = new List<Fish>();
+
+        public Aquarium()
         {
-            _cycle++;
-
-            for (int i = _fishes.Count - 1; i >= 0; i--)
-            {
-                Fish currentFish = _fishes[i];
-                currentFish.Grow();
-
-                if (currentFish.Age >= currentFish.DeadAge)
-                {
-                    Console.WriteLine($"Fish {currentFish.Name} has died of old age ({currentFish.DeadAge} y.o)");
-                    Console.ReadKey();
-
-                    _fishes.Remove(currentFish);
-                }
-            }
+            Capacity = 5;
+            Cycle = 0;
         }
 
-        private void ShowInfo()
+        public int Capacity { get; private set; }
+        public int Cycle { get; private set; }
+        public int FishesCount => _fishes.Count;
+
+        public void ProcessCycle()
         {
-            Console.WriteLine($"Current cycle: {_cycle}\n");
-            Console.WriteLine($"Aquarium's capacity: {_capacity}");
+            Cycle++;
+
+            AgeAllFishes();
+            RemoveDeadFishes();
+        }
+
+        public void ShowInfo()
+        {
+            Console.WriteLine($"Current cycle: {Cycle}\n");
+            Console.WriteLine($"Aquarium's capacity: {Capacity}");
 
             ShowAllFishes();
         }
 
-        private void ShowAllFishes()
+        public void ShowAllFishes()
         {
             Console.WriteLine("Fishes in aquarium:");
 
@@ -153,6 +145,57 @@
                 {
                     Fish fish = _fishes[i];
                     Console.WriteLine($"{i + 1}. {fish.GetInfo()}");
+                }
+            }
+        }
+
+        public void AddFish(Fish fish)
+        {
+            if (_fishes.Count < Capacity)
+            {
+                _fishes.Add(fish);
+
+                Console.WriteLine($"Fish {fish.Name} has been added to aquarium");
+            }
+            else
+            {
+                Console.WriteLine("Aquarium is full");
+            }
+        }
+
+        public bool TryRemoveFishAt(int index, out Fish removedFish)
+        {
+            if (index >= 0 && index < _fishes.Count)
+            {
+                removedFish = _fishes[index];
+                _fishes.RemoveAt(index);
+                return true;
+            }
+
+            removedFish = null;
+            return false;
+        }
+
+        private void AgeAllFishes()
+        {
+            foreach (Fish fish in _fishes)
+            {
+                fish.Grow();
+            }
+        }
+
+        private void RemoveDeadFishes()
+        {
+            for (int i = _fishes.Count - 1; i >= 0; i--)
+            {
+                Fish currentFish = _fishes[i];
+
+                if (currentFish.Age >= currentFish.DeadAge)
+                {
+                    Console.WriteLine($"Fish {currentFish.Name} has died of old age ({currentFish.DeadAge} y.o)");
+                    Console.ReadKey();
+
+                    _fishes.Remove(currentFish);
                 }
             }
         }

@@ -4,8 +4,8 @@ class Program
 {
     private static void Main()
     {
-        Aquarium aquarium = new();
+        Aquarist aquarist = new();
 
-        aquarium.Run();
+        aquarist.Run();
     }
 }
