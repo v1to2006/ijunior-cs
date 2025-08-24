@@ -1,8 +1,10 @@
-﻿class Program
+﻿using OOP.Assignments.War;
+
+class Program
 {
     private static void Main()
     {
-        OOP.Assignments.War.War war = new();
+        War war = new();
 
         war.Start();
     }
