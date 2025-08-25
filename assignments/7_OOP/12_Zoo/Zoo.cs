@@ -64,7 +64,6 @@
                 Console.Clear();
                 Console.WriteLine("Welcome to Zoo!\n");
 
-                Console.WriteLine("All cages:\n");
                 _zoo.ShowCages();
 
                 Console.WriteLine("\nEnter cage number to see info or type EXIT to leave");
