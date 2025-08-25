@@ -6,6 +6,22 @@
         Female
     }
 
+    class ZooFactory
+    {
+        private CageFactory _cageFactory = new CageFactory();
+
+        public Zoo Create()
+        {
+            return new Zoo(new List<Cage>
+            {
+                _cageFactory.Create("Lion", "Roar!"),
+                _cageFactory.Create("Pig", "Oink!"),
+                _cageFactory.Create("Horse", "Whinny!"),
+                _cageFactory.Create("Owl", "Hoot!"),
+            });
+        }
+    }
+
     class CageFactory
     {
         private AnimalFactory _animalFactory = new AnimalFactory();
@@ -23,7 +39,7 @@
                 animals.Add(_animalFactory.Create(animalType, animalSound));
             }
 
-            return new Cage(animalType, animalSound, animals);
+            return new Cage(animals);
         }
     }
 
@@ -31,27 +47,27 @@
     {
         public Animal Create(string animalType, string animalSound)
         {
-            return new Animal(animalType, animalSound, GetRandomGender());
+            return new Animal(animalType, animalSound, GenerateRandomGender());
         }
 
-        private Gender GetRandomGender()
+        private Gender GenerateRandomGender()
         {
-            int genderValue = Utils.GetRandomNumber(0, 1 + 1);
+            Gender[] genders = { Gender.Male, Gender.Female };
 
-            if (genderValue == 0)
-            {
-                return Gender.Male;
-            }
-            else
-            {
-                return Gender.Female;
-            }
+            return genders[Utils.GetRandomNumber(0, genders.Length)];
         }
     }
 
     class Visitor
     {
-        private Zoo _zoo = new Zoo();
+        private Zoo _zoo;
+
+        public Visitor()
+        {
+            ZooFactory zooFactory = new ZooFactory();
+
+            _zoo = zooFactory.Create();
+        }
 
         public void Run()
         {
@@ -64,9 +80,9 @@
                 Console.Clear();
                 Console.WriteLine("Welcome to Zoo!\n");
 
-                _zoo.ShowCages();
+                _zoo.ShowCageList();
 
-                Console.WriteLine("\nEnter cage number to see info or type EXIT to leave");
+                Console.WriteLine($"\nEnter cage number to see info or type {CommandExit} to leave");
                 Console.Write("> ");
                 string userInput = Console.ReadLine().ToUpper();
 
@@ -107,11 +123,11 @@
 
     class Zoo
     {
-        List<Cage> _cages = new List<Cage>();
+        private List<Cage> _cages;
 
-        public Zoo()
+        public Zoo(List<Cage> cages)
         {
-            InitCages();
+            _cages = cages;
         }
 
         public bool TryGetCageByIndex(int index, out Cage cage)
@@ -130,10 +146,10 @@
 
         public void ShowCageInfo(Cage cage)
         {
-            cage.ShowFullInfo();
+            cage.ShowDetails();
         }
 
-        public void ShowCages()
+        public void ShowCageList()
         {
             Console.WriteLine("Available cages in zoo:");
 
@@ -142,42 +158,41 @@
                 Console.WriteLine($"{i + 1}. {_cages[i].GetBasicInfo()}");
             }
         }
-
-        private void InitCages()
-        {
-            CageFactory factory = new CageFactory();
-
-            _cages.Add(factory.Create("Lion", "Roar!"));
-            _cages.Add(factory.Create("Pig", "Oink!"));
-            _cages.Add(factory.Create("Horse", "Whinny!"));
-            _cages.Add(factory.Create("Owl", "Hoot!"));
-        }
     }
 
     class Cage
     {
-        private string _animalType;
-        private string _animalSound;
         private List<Animal> _animals = new List<Animal>();
 
-        public Cage(string animalType, string animalSound, List<Animal> animals)
+        public Cage(List<Animal> animals)
         {
-            _animalType = animalType;
-            _animalSound = animalSound;
             _animals = animals;
         }
 
         public string GetBasicInfo()
         {
-            return $"{_animalType}s cage";
+            if (_animals.Count == 0)
+            {
+                return "Empty cage";
+            }
+
+            return $"{_animals[0].Type}s cage";
         }
 
-        public void ShowFullInfo()
+        public void ShowDetails()
         {
-            Console.WriteLine($"{_animalType}s cage");
+            if (_animals.Count == 0)
+            {
+                return;
+            }
+
+            string animalsType = _animals[0].Type;
+            string animalsSound = _animals[0].Sound;
+
+            Console.WriteLine($"{animalsType}s cage");
             Console.WriteLine($"Amount: {_animals.Count}");
-            Console.WriteLine($"Sound: {_animalSound}");
-            Console.WriteLine($"\nAll {_animalType}s in cage:\n");
+            Console.WriteLine($"Sound: {animalsSound}");
+            Console.WriteLine($"\nAll {animalsType}s in cage:\n");
 
             for (int i = 0; i < _animals.Count; i++)
             {
@@ -188,20 +203,21 @@
 
     class Animal
     {
-        private string _type;
         private Gender _gender;
-        private string _sound;
 
         public Animal(string animalType, string sound, Gender gender)
         {
-            _type = animalType;
             _gender = gender;
-            _sound = sound;
+            Type = animalType;
+            Sound = sound;
         }
+
+        public string Type { get; private set; }
+        public string Sound { get; private set; }
 
         public string GetInfo()
         {
-            return $"{_type} - Gender: {_gender} - Sound: {_sound}";
+            return $"{Type} - Gender: {_gender} - Sound: {Sound}";
         }
     }
 
