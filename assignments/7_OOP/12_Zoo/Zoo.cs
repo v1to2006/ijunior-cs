@@ -6,6 +6,49 @@
         Female
     }
 
+    class CageFactory
+    {
+        private AnimalFactory _animalFactory = new AnimalFactory();
+
+        public Cage Create(string animalType, string animalSound)
+        {
+            List<Animal> animals = new List<Animal>();
+
+            int minAnimalsCount = 2;
+            int maxAnimalsCount = 5;
+            int animalsCount = Utils.GetRandomNumber(minAnimalsCount, maxAnimalsCount + 1);
+
+            for (int i = 0; i < animalsCount; i++)
+            {
+                animals.Add(_animalFactory.Create(animalType, animalSound));
+            }
+
+            return new Cage(animalType, animalSound, animals);
+        }
+    }
+
+    class AnimalFactory
+    {
+        public Animal Create(string animalType, string animalSound)
+        {
+            return new Animal(animalType, animalSound, GetRandomGender());
+        }
+
+        private Gender GetRandomGender()
+        {
+            int genderValue = Utils.GetRandomNumber(0, 1 + 1);
+
+            if (genderValue == 0)
+            {
+                return Gender.Male;
+            }
+            else
+            {
+                return Gender.Female;
+            }
+        }
+    }
+
     class Visitor
     {
         private Zoo _zoo = new Zoo();
@@ -88,7 +131,7 @@
 
         public void ShowCageInfo(Cage cage)
         {
-            cage.ShowInfo();
+            cage.ShowFullInfo();
         }
 
         public void ShowCages()
@@ -97,91 +140,69 @@
 
             for (int i = 0; i < _cages.Count; i++)
             {
-                Console.WriteLine($"{i + 1}. {_cages[i].AnimalType}s cage");
+                Console.WriteLine($"{i + 1}. {_cages[i].GetBasicInfo()}");
             }
         }
 
         private void InitCages()
         {
-            _cages.Add(new Cage("Lion", "Roar!"));
-            _cages.Add(new Cage("Pig", "Oink!"));
-            _cages.Add(new Cage("Horse", "Whinny!"));
-            _cages.Add(new Cage("Owl", "Hoot!"));
+            CageFactory factory = new CageFactory();
+
+            _cages.Add(factory.Create("Lion", "Roar!"));
+            _cages.Add(factory.Create("Pig", "Oink!"));
+            _cages.Add(factory.Create("Horse", "Whinny!"));
+            _cages.Add(factory.Create("Owl", "Hoot!"));
         }
     }
 
     class Cage
     {
+        private string _animalType;
+        private string _animalSound;
         private List<Animal> _animals = new List<Animal>();
 
-        public Cage(string animalType, string animalSound)
+        public Cage(string animalType, string animalSound, List<Animal> animals)
         {
-            AnimalType = animalType;
-            AnimalSound = animalSound;
-
-            InitAnimals(animalType, animalSound);
+            _animalType = animalType;
+            _animalSound = animalSound;
+            _animals = animals;
         }
 
-        public string AnimalType { get; private set; }
-        public string AnimalSound { get; private set; }
-
-        public void ShowInfo()
+        public string GetBasicInfo()
         {
-            Console.WriteLine($"{AnimalType}s cage");
+            return $"{_animalType}s cage";
+        }
+
+        public void ShowFullInfo()
+        {
+            Console.WriteLine($"{_animalType}s cage");
             Console.WriteLine($"Amount: {_animals.Count}");
-            Console.WriteLine($"Sound: {AnimalSound}");
-            Console.WriteLine($"\nAll {AnimalType}s in cage:\n");
+            Console.WriteLine($"Sound: {_animalSound}");
+            Console.WriteLine($"\nAll {_animalType}s in cage:\n");
 
             for (int i = 0; i < _animals.Count; i++)
             {
                 Console.WriteLine($"{i + 1}. {_animals[i].GetInfo()}");
             }
         }
-
-        private void InitAnimals(string animalType, string animalSound)
-        {
-            int minAnimalsCount = 2;
-            int maxAnimalsCount = 5;
-
-            int animalsCount = Utils.GetRandomNumber(minAnimalsCount, maxAnimalsCount + 1);
-
-            for (int i = 0; i < animalsCount; i++)
-            {
-                _animals.Add(new Animal(animalType, animalSound));
-            }
-        }
     }
 
     class Animal
     {
-        public Animal(string animalType, string sound)
-        {
-            AnimalType = animalType;
-            Gender = GetRandomGender();
-            Sound = sound;
-        }
+        private string _type;
+        private Gender _gender;
+        private string _sound;
 
-        public string AnimalType { get; private set; }
-        public Gender Gender { get; private set; }
-        public string Sound { get; private set; }
+        public Animal(string animalType, string sound, Gender gender)
+        {
+            _type = animalType;
+            _gender = gender;
+            _sound = sound;
+        }
 
         public string GetInfo()
         {
-            return $"{AnimalType} - {Gender} - {Sound}";
-        }
-
-        private Gender GetRandomGender()
-        {
-            int genderValue = Utils.GetRandomNumber(0, 1 + 1);
-
-            if (genderValue == 0)
-            {
-                return Gender.Male;
-            }
-            else
-            {
-                return Gender.Female;
-            }
+            return $"{_type} - Gender: {_gender} - Sound: {_sound}";
         }
     }
 
