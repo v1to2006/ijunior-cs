@@ -1,11 +1,11 @@
-﻿using Assignments.OOP.Zoo;
+﻿using Assignments.OOP.AutoService;
 
 class Program
 {
     private static void Main()
     {
-        Visitor visitor = new Visitor();
+        Mechanic mechanic = new Mechanic();
 
-        visitor.Run();
+        mechanic.Run();
     }
 }
